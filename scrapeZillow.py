@@ -10,6 +10,7 @@ class HousePriceScraper:
         self.homeData = []
         self.isScraping = is_scraping
         self.visited = {}
+        self.count = 0
         self.mins = [300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1250000]
         self.maxs = [500000, 600000, 700000, 800000, 900000, 1000000, 1250000, 1500000, 1750000]
         self.LANGUAGE = "en-US,en;q=0.5"
@@ -34,6 +35,7 @@ class HousePriceScraper:
                             'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36',
                             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36',
                             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/605.1.15 (KHTML, like Gecko)',
+                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
                             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Safari/605.1.15']
 ########################################################################################################################
 
@@ -75,9 +77,11 @@ class HousePriceScraper:
                 page = i + 1
                 for max_cost in self.maxs:
                     soup = self.create_search_soup(page, max_cost, 0, p1, p2, p3, p4)
+                    print(soup)
+                    cur_link = ''
                     for house in soup.find_all('a', {'class': "list-card-link list-card-img"}):
                         cur_link = house.get('href')
-
+                        self.count += 1
                         if cur_link not in self.visited:
                             self.homeLinks.append(cur_link)
                             self.visited[cur_link] = 1
@@ -91,7 +95,6 @@ class HousePriceScraper:
                         temp = float(temp)
                         if temp < 50000:
                             temp = temp*1000000
-
                         self.homeLinkPrice[cur_link] = temp
         if not self.isScraping:
             print('check if you want to Scrape')
@@ -126,9 +129,13 @@ class HousePriceScraper:
 ########################################################################################################################
 
     def write_home_links_list(self):
-        f = open('homeLinks.txt', 'w+')
-        for link in self.homeLinks:
+        f = open('homeLinksAndPrice.txt', 'w+')
+        for link in self.homeLinkPrice:
             f.write(str(link) + ',\n')
+        for link in self.homeLinkPrice:
+            if self.homeLinkPrice[link] < 50000:
+                self.homeLinkPrice[link] = 0
+            f.write(str(self.homeLinkPrice[link]) + ',\n')
 
         f.close()
 
@@ -159,12 +166,13 @@ class HousePriceScraper:
 if '__main__' == __name__:
     scraper = HousePriceScraper(is_scraping=True)
 #   scraper.house_links(20)
-#    scraper.write_home_links_list()
 #    print(len(scraper.homeLinks))
 #    scraper.read_home_links_list()
 #    scraper.check_duplicates()
 #    scraper.scrape_home_data()
     scraper.scrape_house_links(1)
+#    scraper.write_home_links_list()
     print(scraper.homeLinkPrice)
+    print(scraper.count)
 
 
